@@ -29,8 +29,16 @@
           <option th:value="squarish" th:text="Square">SubscriptionList</option>
         </select>
       </div>
+      <div class="mb-3">
+        <select class="form-select" th:field="*{source}">
+          <option th:value="unsplash" th:text="Unsplash">SubscriptionList</option>
+          <option th:value="pexels" th:text="Pexels">SubscriptionList</option>
+          <option th:value="both" th:text="Both">SubscriptionList</option>
+        </select>
+      </div>
     </form>
   </div>
+  <div th:if="${searchKeyword.source == 'pexels'}"><a href="https://www.pexels.com">Photos provided by Pexels</a></div>
   <div th:if="${pages == 0}"><h5>No photos could be found</h5></div>
   <div class="row justify-content-center" data-masonry='{"percentPosition": true, "itemSelector": ".col-6"}'>
     <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2 d-flex justify-content-center" th:each="photo : ${photos}">

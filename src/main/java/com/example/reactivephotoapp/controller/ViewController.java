@@ -1,7 +1,9 @@
 package com.example.reactivephotoapp.controller;
 
+import com.example.reactivephotoapp.model.PexelsPhoto;
 import com.example.reactivephotoapp.model.Photo;
 import com.example.reactivephotoapp.model.SearchKeyword;
+import com.example.reactivephotoapp.service.PexelsService;
 import com.example.reactivephotoapp.service.UnsplashService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,6 +21,9 @@ public class ViewController {
     @Autowired
     UnsplashService unsplashService;
 
+    @Autowired
+    PexelsService pexelsService;
+
     @GetMapping("/")
     public String displayIndex(Model model) {
         model.addAttribute("searchKeyword", new SearchKeyword());
@@ -28,10 +33,26 @@ public class ViewController {
 
     @PostMapping("/")
     public String performSearch(@ModelAttribute("searchKeyword") SearchKeyword searchKeyword, Model model) {
-        Flux<Photo> photos = unsplashService.getPhotos(searchKeyword.getText(), searchKeyword.getOrientation());
-        Mono<Integer> pages =unsplashService.getTotalPages(searchKeyword.getText(), searchKeyword.getOrientation());
+        Flux<PexelsPhoto> pexelsPhotos = pexelsService.getPhotos(searchKeyword.getText(), searchKeyword.getOrientation());
+        Mono<Integer> pexelsPages = pexelsService.getTotalPages(searchKeyword.getText(), searchKeyword.getOrientation());
 
-        ReactiveDataDriverContextVariable reactivePhotos = new ReactiveDataDriverContextVariable(photos, 1);
+        Flux<Photo> unsplashPhotos = unsplashService.getPhotos(searchKeyword.getText(), searchKeyword.getOrientation());
+        Mono<Integer> unsplashPages =unsplashService.getTotalPages(searchKeyword.getText(), searchKeyword.getOrientation());
+
+        ReactiveDataDriverContextVariable reactivePhotos;
+        Mono<Integer> pages;
+
+        if (searchKeyword.getSource().equals("unsplash")){
+            reactivePhotos = new ReactiveDataDriverContextVariable(unsplashPhotos, 1);
+            pages = unsplashPages;
+        } else if (searchKeyword.getSource().equals("pexels")) {
+            reactivePhotos = new ReactiveDataDriverContextVariable(pexelsPhotos, 1);
+            pages = pexelsPages;
+        } else {
+            reactivePhotos = new ReactiveDataDriverContextVariable(Flux.concat(pexelsPhotos, unsplashPhotos));
+            pages = Mono.zip(unsplashPages, pexelsPages, Integer::sum);
+        }
+
         model.addAttribute("photos", reactivePhotos);
         model.addAttribute("pages", pages);
         model.addAttribute("searchText", searchKeyword.getText());

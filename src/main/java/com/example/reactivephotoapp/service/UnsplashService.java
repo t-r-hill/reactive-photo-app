@@ -15,17 +15,17 @@ import java.time.Duration;
 public class UnsplashService {
 
     @Autowired
-    WebClient webClient;
+    WebClient unsplashClient;
 
     public Flux<Photo> getPhotos(String searchText, String orientation) {
         return getTotalPages(searchText, orientation)
                 .flatMapMany(t -> Flux.range(1, t > 5 ? 5 : t))
                 .flatMap(f -> searchUnsplash(searchText, orientation, f)
-                        .flatMapIterable(UnsplashResponse::getResults), 1);
+                        .flatMapIterable(UnsplashResponse::getResults), 5);
     }
 
     public Mono<Integer> getTotalPages(String searchText, String orientation) {
-        return webClient.get()
+        return unsplashClient.get()
                 .uri(uri -> uri
                         .queryParam("page", "1")
                         .queryParam("query", searchText)
@@ -37,10 +37,7 @@ public class UnsplashService {
     }
 
     public Mono<UnsplashResponse> searchUnsplash(String searchText, String orientation, int pageNumber) {
-        return Mono.empty()
-                        .delaySubscription(Duration.ofSeconds(2))
-                                .then(
-                webClient.get()
+        return unsplashClient.get()
                 .uri(uri -> uri
                         .queryParam("page", pageNumber)
                         .queryParam("query", searchText)
@@ -48,6 +45,7 @@ public class UnsplashService {
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(UnsplashResponse.class));
-    }
+                .bodyToMono(UnsplashResponse.class)
+//                .delaySubscription(Duration.ofSeconds(2))
+    ;}
 }

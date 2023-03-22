@@ -11,17 +11,31 @@ import java.net.URI;
 @Configuration
 public class ClientConfig {
 
-    @Value("${search.uri}")
-    private URI searchUri;
+    @Value("${unsplash.search.uri}")
+    private URI unsplashSearchUri;
 
-    @Value("${api.client-id}")
-    private String secret;
+    @Value("${unsplash.client-id}")
+    private String unsplashSecret;
+
+    @Value("${pexels.search.uri}")
+    private URI pexelsSearchUri;
+
+    @Value("${pexels.client-id}")
+    private String pexelsSecret;
 
     @Bean
-    public WebClient webClient() {
+    public WebClient unsplashClient() {
         return WebClient.builder()
-                .baseUrl(searchUri.toString())
-                .defaultHeader(HttpHeaders.AUTHORIZATION, secret)
+                .baseUrl(unsplashSearchUri.toString())
+                .defaultHeader(HttpHeaders.AUTHORIZATION, unsplashSecret)
+                .build();
+    }
+
+    @Bean
+    public WebClient pexelsClient() {
+        return WebClient.builder()
+                .baseUrl(pexelsSearchUri.toString())
+                .defaultHeader(HttpHeaders.AUTHORIZATION, pexelsSecret)
                 .build();
     }
 }
